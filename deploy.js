@@ -38,8 +38,12 @@ setTimeout(() => {
         console.error('❌ Local server test failed');
         process.exit(1);
     } finally {
-        // Server stoppen
-        process.kill(-serverProcess.pid);
+        // Server stoppen (sicherer Weg)
+        try {
+            process.kill(serverProcess.pid);
+        } catch (e) {
+            // Ignoriere Fehler beim Beenden
+        }
     }
 
     // Schritt 3: Git-Status prüfen
