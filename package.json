@@ -6,7 +6,8 @@
   "scripts": {
     "start": "python -m http.server 8000",
     "build": "echo 'Static site - no build needed'",
-    "deploy": "npx vercel --prod",
+    "deploy": "gh-pages -d .",
+    "deploy:vercel": "npx vercel --prod",
     "preview": "vercel"
   },
   "keywords": [
@@ -23,6 +24,9 @@
     "url": "https://github.com/yourusername/endless-runner-game"
   },
   "devDependencies": {
-    "vercel": "^32.0.0"
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.8.1",
+    "gh-pages": "^6.3.0",
+    "vercel": "^48.4.0"
   }
 }
