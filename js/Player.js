@@ -44,6 +44,8 @@ export class Player {
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.isJumping = false;
         this.jumpStartTime = 0;
+        this.rotationVelocity = 0; // For jump rotation animation
+        this.lastTrailTime = 0; // For trail effect timing
     }
 
     jump() {
@@ -52,6 +54,7 @@ export class Player {
             this.isJumping = true;
             game.playerCanJump = false;
             this.jumpStartTime = Date.now();
+            this.rotationVelocity = 0.15; // Start rotation on jump
         }
     }
 
@@ -61,13 +64,39 @@ export class Player {
             this.velocity.y -= 0.01; // Gravity
             this.mesh.position.y += this.velocity.y;
 
+            // Rotate player during jump
+            if (this.rotationVelocity > 0) {
+                this.mesh.rotation.z += this.rotationVelocity;
+                this.rotationVelocity *= 0.98; // Slow down rotation
+            }
+
             // Check if landed
             if (this.mesh.position.y <= 0.5) {
                 this.mesh.position.y = 0.5;
                 this.velocity.y = 0;
                 this.isJumping = false;
                 game.playerCanJump = true;
+                this.rotationVelocity = 0;
+
+                // Create landing dust particles
+                if (window.particleSystem) {
+                    window.particleSystem.createLandingDust(this.mesh.position);
+                }
             }
+        }
+
+        // Create trail effect (every 50ms)
+        const currentTime = Date.now();
+        if (currentTime - this.lastTrailTime > 50) {
+            if (window.particleSystem) {
+                window.particleSystem.createTrailParticle(this.mesh.position, this.isJumping);
+            }
+            this.lastTrailTime = currentTime;
+        }
+
+        // Idle rotation when on ground (subtle bobbing effect)
+        if (!this.isJumping) {
+            this.mesh.rotation.x = Math.sin(currentTime * 0.003) * 0.05;
         }
 
         // Update camera to follow player

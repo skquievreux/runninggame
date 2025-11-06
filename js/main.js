@@ -5,6 +5,8 @@ import { player } from './Player.js';
 import { environment } from './Environment.js';
 import { obstacleManager } from './Obstacles.js';
 import { particleSystem } from './Particles.js';
+import { coinManager } from './Coins.js';
+import { powerUpManager } from './PowerUps.js';
 import { uiManager } from './UI.js';
 import { inputManager } from './Utils.js';
 
@@ -16,6 +18,11 @@ let animationId;
 function init() {
     // All initialization is done in the constructors of the imported modules
     console.log('Game initialized');
+
+    // Make modules globally accessible
+    window.particleSystem = particleSystem;
+    window.player = player;
+    window.uiManager = uiManager;
 
     // Start the game loop
     animate(0);
@@ -47,11 +54,20 @@ function update(deltaTime) {
     // Update obstacles
     obstacleManager.update(deltaTime);
 
+    // Update coins
+    coinManager.update(deltaTime);
+
+    // Update power-ups
+    powerUpManager.update(deltaTime);
+
     // Check collisions
     obstacleManager.checkCollisions(player.getMesh());
+    coinManager.checkCollisions(player.getMesh());
+    powerUpManager.checkCollisions(player.getMesh());
 
     // Update particles
     particleSystem.updateParticles(deltaTime);
+    particleSystem.updateTrailParticles(deltaTime);
 
     // Update environment (clouds)
     environment.updateClouds();

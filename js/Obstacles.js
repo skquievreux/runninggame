@@ -150,8 +150,20 @@ export class ObstacleManager {
         // Check obstacle collisions
         game.obstacles.forEach((obstacle, index) => {
             if (obstacle && this.checkCollision(playerMesh, obstacle)) {
-                // Handle collision
-                game.loseLife();
+                // Check if player has shield
+                if (game.hasShield) {
+                    // Shield absorbs hit - just remove obstacle
+                    if (window.particleSystem) {
+                        window.particleSystem.createExplosion(obstacle.position, 0x00FFFF);
+                    }
+                } else {
+                    // Normal collision - lose life
+                    game.loseLife();
+                    if (window.particleSystem) {
+                        window.particleSystem.createCollisionEffect(obstacle.position);
+                    }
+                }
+
                 sceneManager.removeFromScene(obstacle);
                 game.obstacles.splice(index, 1);
             }

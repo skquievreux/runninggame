@@ -5,14 +5,16 @@ import { game } from './Game.js';
 
 export class Environment {
     constructor() {
+        this.skyMaterial = null; // Store sky material for dynamic updates
+        this.mountainLayers = []; // Store mountain layers for parallax
         this.createBackground();
         this.createGround();
     }
 
     createBackground() {
-        // Sky gradient - now at the bottom
-        const skyGeometry = new THREE.PlaneGeometry(2000, 1000); // Vergrößert für vollständige Abdeckung
-        const skyMaterial = new THREE.ShaderMaterial({
+        // Sky gradient with dynamic colors
+        const skyGeometry = new THREE.PlaneGeometry(2000, 1000);
+        this.skyMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 bottomColor: { value: new THREE.Color(0x0077FF) },  // Blauer Himmel unten
                 topColor: { value: new THREE.Color(0xADD8E6) } // Hellerer Himmel oben
@@ -35,9 +37,9 @@ export class Environment {
             side: THREE.BackSide
         });
 
-        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        const sky = new THREE.Mesh(skyGeometry, this.skyMaterial);
         sky.position.z = -100;
-        sky.position.y = -100; // Himmel ist jetzt unten
+        sky.position.y = -100;
         sceneManager.addToScene(sky);
 
         // Create mountains
@@ -48,37 +50,51 @@ export class Environment {
     }
 
     createMountains() {
-        const mountainGeometry = new THREE.BufferGeometry();
-        const mountainPoints = [];
+        // Create multiple mountain layers for parallax effect
+        const layers = [
+            { zPos: -80, color: 0x2C3E50, height: 20, speed: 0.005 }, // Far back, darker
+            { zPos: -60, color: 0x34495E, height: 18, speed: 0.008 }, // Middle
+            { zPos: -50, color: 0x4B6455, height: 15, speed: 0.012 }  // Front, original
+        ];
 
-        // Create jagged mountain silhouette
-        mountainPoints.push(new THREE.Vector3(-100, -10, -50));
+        layers.forEach(layerConfig => {
+            const mountainPoints = [];
 
-        // Generate random mountain peaks
-        for (let i = -100; i <= 100; i += 10) {
-            const height = Math.random() * 15 + 5;
-            mountainPoints.push(new THREE.Vector3(i, height, -50));
-        }
+            // Create jagged mountain silhouette
+            mountainPoints.push(new THREE.Vector3(-100, -10, layerConfig.zPos));
 
-        mountainPoints.push(new THREE.Vector3(100, -10, -50));
+            // Generate random mountain peaks
+            for (let i = -100; i <= 100; i += 10) {
+                const height = Math.random() * layerConfig.height + 5;
+                mountainPoints.push(new THREE.Vector3(i, height, layerConfig.zPos));
+            }
 
-        // Create mountain shape
-        const mountainShape = new THREE.Shape();
-        mountainShape.moveTo(mountainPoints[0].x, mountainPoints[0].y);
+            mountainPoints.push(new THREE.Vector3(100, -10, layerConfig.zPos));
 
-        for (let i = 1; i < mountainPoints.length; i++) {
-            mountainShape.lineTo(mountainPoints[i].x, mountainPoints[i].y);
-        }
+            // Create mountain shape
+            const mountainShape = new THREE.Shape();
+            mountainShape.moveTo(mountainPoints[0].x, mountainPoints[0].y);
 
-        const mountainGeom = new THREE.ShapeGeometry(mountainShape);
-        const mountainMaterial = new THREE.MeshLambertMaterial({
-            color: 0x4B6455,  // Dunkelgrün/Grau für Berge
-            side: THREE.DoubleSide
+            for (let i = 1; i < mountainPoints.length; i++) {
+                mountainShape.lineTo(mountainPoints[i].x, mountainPoints[i].y);
+            }
+
+            const mountainGeom = new THREE.ShapeGeometry(mountainShape);
+            const mountainMaterial = new THREE.MeshLambertMaterial({
+                color: layerConfig.color,
+                side: THREE.DoubleSide
+            });
+
+            const mountains = new THREE.Mesh(mountainGeom, mountainMaterial);
+            mountains.position.y = 0;
+            sceneManager.addToScene(mountains);
+
+            this.mountainLayers.push({
+                mesh: mountains,
+                speed: layerConfig.speed,
+                originalX: 0
+            });
         });
-
-        const mountains = new THREE.Mesh(mountainGeom, mountainMaterial);
-        mountains.position.y = 0;
-        sceneManager.addToScene(mountains);
     }
 
     createClouds() {
@@ -175,6 +191,44 @@ export class Environment {
                 cloud.position.x = 150; // Reset position when off screen
             }
         });
+
+        // Update mountain layers with parallax scrolling
+        this.mountainLayers.forEach(layer => {
+            layer.mesh.position.x += layer.speed;
+            // Wrap around if moved too far
+            if (layer.mesh.position.x > 30) {
+                layer.mesh.position.x = -30;
+            }
+        });
+
+        // Update sky colors based on score (day/sunset/night cycle)
+        if (this.skyMaterial) {
+            const scorePhase = (game.score / 100) % 4; // Cycle every 400 points
+
+            let bottomColor, topColor;
+
+            if (scorePhase < 1) {
+                // Day (Blue sky)
+                bottomColor = new THREE.Color(0x0077FF);
+                topColor = new THREE.Color(0xADD8E6);
+            } else if (scorePhase < 2) {
+                // Sunset (Orange/Purple)
+                bottomColor = new THREE.Color(0xFF6B35);
+                topColor = new THREE.Color(0xFF85A1);
+            } else if (scorePhase < 3) {
+                // Night (Dark blue/purple)
+                bottomColor = new THREE.Color(0x1A1A2E);
+                topColor = new THREE.Color(0x16213E);
+            } else {
+                // Dawn (Purple/Pink)
+                bottomColor = new THREE.Color(0x6B4C9A);
+                topColor = new THREE.Color(0xFFB7C5);
+            }
+
+            // Smooth transition
+            this.skyMaterial.uniforms.bottomColor.value.lerp(bottomColor, 0.01);
+            this.skyMaterial.uniforms.topColor.value.lerp(topColor, 0.01);
+        }
     }
 }
 

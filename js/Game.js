@@ -17,6 +17,10 @@ export class Game {
         this.lastObstacleTime = 0;
         this.gameStarted = true;
         this.passedObstacles = [];
+
+        // Power-up flags
+        this.hasShield = false;
+        this.hasMagnet = false;
     }
 
     updateScore(points) {

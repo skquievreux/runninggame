@@ -6,6 +6,7 @@ import { game } from './Game.js';
 export class ParticleSystem {
     constructor() {
         this.particles = [];
+        this.trailParticles = []; // Separate array for trail particles
     }
 
     createExplosion(position, color) {
@@ -93,6 +94,197 @@ export class ParticleSystem {
         sceneManager.addToScene(flashLight);
 
         // Remove flash after a short time
+        setTimeout(() => {
+            sceneManager.removeFromScene(flashLight);
+        }, 200);
+    }
+
+    createTrailParticle(position, isJumping) {
+        // Create colorful trail particles behind the player
+        const geometry = new THREE.BufferGeometry();
+        const posArray = new Float32Array([position.x, position.y, position.z]);
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Rainbow colors based on time for variation
+        const colors = [0xFF0066, 0x9966FF, 0x00FFFF, 0x00FF66, 0xFFFF00, 0xFF6600];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+        const material = new THREE.PointsMaterial({
+            color: randomColor,
+            size: isJumping ? 0.3 : 0.15, // Larger particles when jumping
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending // Makes particles glow
+        });
+
+        const particle = new THREE.Points(geometry, material);
+        sceneManager.addToScene(particle);
+
+        this.trailParticles.push({
+            mesh: particle,
+            life: 0.5, // 0.5 seconds lifetime
+            position: new THREE.Vector3(position.x, position.y, position.z)
+        });
+    }
+
+    createLandingDust(position) {
+        // Create dust cloud when player lands
+        const dustCount = 15;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(dustCount * 3);
+        const velocities = [];
+
+        for (let i = 0; i < dustCount; i++) {
+            positions[i * 3] = position.x + (Math.random() - 0.5) * 0.5;
+            positions[i * 3 + 1] = position.y - 0.3; // Below player
+            positions[i * 3 + 2] = position.z + (Math.random() - 0.5) * 0.5;
+
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.15,
+                y: Math.random() * 0.05,
+                z: (Math.random() - 0.5) * 0.15
+            });
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: 0xCCCCCC, // Gray dust
+            size: 0.25,
+            transparent: true,
+            opacity: 0.6
+        });
+
+        const dustSystem = new THREE.Points(geometry, material);
+        sceneManager.addToScene(dustSystem);
+
+        this.particles.push({
+            system: dustSystem,
+            velocities: velocities,
+            life: 0.5,
+            positions: positions
+        });
+    }
+
+    updateTrailParticles(deltaTime) {
+        for (let i = this.trailParticles.length - 1; i >= 0; i--) {
+            const particle = this.trailParticles[i];
+
+            // Decrease lifetime
+            particle.life -= deltaTime;
+
+            // Fade out
+            particle.mesh.material.opacity = particle.life * 1.6; // Faster fade
+
+            // Move slightly down
+            particle.position.y -= 0.01;
+            particle.mesh.position.copy(particle.position);
+
+            // Remove if expired
+            if (particle.life <= 0) {
+                sceneManager.removeFromScene(particle.mesh);
+                particle.mesh.geometry.dispose();
+                particle.mesh.material.dispose();
+                this.trailParticles.splice(i, 1);
+            }
+        }
+    }
+
+    createCoinCollectionEffect(position) {
+        // Create golden sparkle particles when coin is collected
+        const sparkleCount = 20;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(sparkleCount * 3);
+        const velocities = [];
+
+        for (let i = 0; i < sparkleCount; i++) {
+            positions[i * 3] = position.x;
+            positions[i * 3 + 1] = position.y;
+            positions[i * 3 + 2] = position.z;
+
+            // Sparkles burst outward
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.2,
+                y: Math.random() * 0.3,
+                z: (Math.random() - 0.5) * 0.2
+            });
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: 0xFFD700, // Gold
+            size: 0.15,
+            transparent: true,
+            opacity: 1,
+            blending: THREE.AdditiveBlending
+        });
+
+        const sparkleSystem = new THREE.Points(geometry, material);
+        sceneManager.addToScene(sparkleSystem);
+
+        this.particles.push({
+            system: sparkleSystem,
+            velocities: velocities,
+            life: 0.8,
+            positions: positions
+        });
+
+        // Add flash light
+        const flashLight = new THREE.PointLight(0xFFD700, 3, 8);
+        flashLight.position.copy(position);
+        sceneManager.addToScene(flashLight);
+
+        setTimeout(() => {
+            sceneManager.removeFromScene(flashLight);
+        }, 150);
+    }
+
+    createPowerUpCollectionEffect(position, color) {
+        // Create burst effect with specified color
+        const burstCount = 30;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(burstCount * 3);
+        const velocities = [];
+
+        for (let i = 0; i < burstCount; i++) {
+            positions[i * 3] = position.x;
+            positions[i * 3 + 1] = position.y;
+            positions[i * 3 + 2] = position.z;
+
+            // Burst in all directions
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.3,
+                y: (Math.random() - 0.5) * 0.3,
+                z: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: color,
+            size: 0.2,
+            transparent: true,
+            opacity: 1,
+            blending: THREE.AdditiveBlending
+        });
+
+        const burstSystem = new THREE.Points(geometry, material);
+        sceneManager.addToScene(burstSystem);
+
+        this.particles.push({
+            system: burstSystem,
+            velocities: velocities,
+            life: 1.0,
+            positions: positions
+        });
+
+        // Flash effect
+        const flashLight = new THREE.PointLight(color, 5, 10);
+        flashLight.position.copy(position);
+        sceneManager.addToScene(flashLight);
+
         setTimeout(() => {
             sceneManager.removeFromScene(flashLight);
         }, 200);
