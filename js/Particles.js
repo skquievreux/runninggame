@@ -189,6 +189,56 @@ export class ParticleSystem {
             }
         }
     }
+
+    createCoinCollectionEffect(position) {
+        // Create golden sparkle particles when coin is collected
+        const sparkleCount = 20;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(sparkleCount * 3);
+        const velocities = [];
+
+        for (let i = 0; i < sparkleCount; i++) {
+            positions[i * 3] = position.x;
+            positions[i * 3 + 1] = position.y;
+            positions[i * 3 + 2] = position.z;
+
+            // Sparkles burst outward
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.2,
+                y: Math.random() * 0.3,
+                z: (Math.random() - 0.5) * 0.2
+            });
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: 0xFFD700, // Gold
+            size: 0.15,
+            transparent: true,
+            opacity: 1,
+            blending: THREE.AdditiveBlending
+        });
+
+        const sparkleSystem = new THREE.Points(geometry, material);
+        sceneManager.addToScene(sparkleSystem);
+
+        this.particles.push({
+            system: sparkleSystem,
+            velocities: velocities,
+            life: 0.8,
+            positions: positions
+        });
+
+        // Add flash light
+        const flashLight = new THREE.PointLight(0xFFD700, 3, 8);
+        flashLight.position.copy(position);
+        sceneManager.addToScene(flashLight);
+
+        setTimeout(() => {
+            sceneManager.removeFromScene(flashLight);
+        }, 150);
+    }
 }
 
 export let particleSystem = new ParticleSystem();

@@ -5,6 +5,7 @@ import { player } from './Player.js';
 import { environment } from './Environment.js';
 import { obstacleManager } from './Obstacles.js';
 import { particleSystem } from './Particles.js';
+import { coinManager } from './Coins.js';
 import { uiManager } from './UI.js';
 import { inputManager } from './Utils.js';
 
@@ -50,8 +51,12 @@ function update(deltaTime) {
     // Update obstacles
     obstacleManager.update(deltaTime);
 
+    // Update coins
+    coinManager.update(deltaTime);
+
     // Check collisions
     obstacleManager.checkCollisions(player.getMesh());
+    coinManager.checkCollisions(player.getMesh());
 
     // Update particles
     particleSystem.updateParticles(deltaTime);
