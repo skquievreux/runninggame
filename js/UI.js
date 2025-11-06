@@ -6,6 +6,7 @@ export class UIManager {
         this.scoreDisplay = null;
         this.livesDisplay = null;
         this.gameOverScreen = null;
+        this.powerUpDisplay = null;
         this.createUI();
     }
 
@@ -13,6 +14,7 @@ export class UIManager {
         this.createScoreDisplay();
         this.createLivesDisplay();
         this.createGameOverScreen();
+        this.createPowerUpDisplay();
     }
 
     createScoreDisplay() {
@@ -79,7 +81,50 @@ export class UIManager {
 
     updateLivesDisplay() {
         if (this.livesDisplay) {
-            this.livesDisplay.textContent = `Lives: ${game.lives}`;
+            // Display lives as hearts
+            const hearts = '❤️'.repeat(Math.max(0, game.lives));
+            const emptyHearts = '🖤'.repeat(Math.max(0, 5 - game.lives));
+            this.livesDisplay.innerHTML = `${hearts}${emptyHearts}`;
+        }
+    }
+
+    createPowerUpDisplay() {
+        const powerUpDisplay = document.createElement('div');
+        powerUpDisplay.id = 'powerup-display';
+        powerUpDisplay.style.position = 'absolute';
+        powerUpDisplay.style.bottom = '20px';
+        powerUpDisplay.style.left = '50%';
+        powerUpDisplay.style.transform = 'translateX(-50%)';
+        powerUpDisplay.style.color = 'white';
+        powerUpDisplay.style.fontSize = '32px';
+        powerUpDisplay.style.fontFamily = 'Arial, sans-serif';
+        powerUpDisplay.style.fontWeight = 'bold';
+        powerUpDisplay.style.textAlign = 'center';
+        powerUpDisplay.style.textShadow = '2px 2px 4px #000000';
+        powerUpDisplay.style.zIndex = '1500';
+        powerUpDisplay.style.display = 'none';
+        powerUpDisplay.style.transition = 'opacity 0.3s';
+        document.body.appendChild(powerUpDisplay);
+        this.powerUpDisplay = powerUpDisplay;
+    }
+
+    showPowerUpNotification(type) {
+        if (this.powerUpDisplay) {
+            this.powerUpDisplay.innerHTML = `${type.icon} ${type.name.toUpperCase()} ACTIVATED!`;
+            this.powerUpDisplay.style.display = 'block';
+            this.powerUpDisplay.style.opacity = '1';
+
+            // Fade out after 2 seconds
+            setTimeout(() => {
+                if (this.powerUpDisplay) {
+                    this.powerUpDisplay.style.opacity = '0';
+                    setTimeout(() => {
+                        if (this.powerUpDisplay) {
+                            this.powerUpDisplay.style.display = 'none';
+                        }
+                    }, 300);
+                }
+            }, 2000);
         }
     }
 

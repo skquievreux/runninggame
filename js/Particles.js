@@ -239,6 +239,56 @@ export class ParticleSystem {
             sceneManager.removeFromScene(flashLight);
         }, 150);
     }
+
+    createPowerUpCollectionEffect(position, color) {
+        // Create burst effect with specified color
+        const burstCount = 30;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(burstCount * 3);
+        const velocities = [];
+
+        for (let i = 0; i < burstCount; i++) {
+            positions[i * 3] = position.x;
+            positions[i * 3 + 1] = position.y;
+            positions[i * 3 + 2] = position.z;
+
+            // Burst in all directions
+            velocities.push({
+                x: (Math.random() - 0.5) * 0.3,
+                y: (Math.random() - 0.5) * 0.3,
+                z: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: color,
+            size: 0.2,
+            transparent: true,
+            opacity: 1,
+            blending: THREE.AdditiveBlending
+        });
+
+        const burstSystem = new THREE.Points(geometry, material);
+        sceneManager.addToScene(burstSystem);
+
+        this.particles.push({
+            system: burstSystem,
+            velocities: velocities,
+            life: 1.0,
+            positions: positions
+        });
+
+        // Flash effect
+        const flashLight = new THREE.PointLight(color, 5, 10);
+        flashLight.position.copy(position);
+        sceneManager.addToScene(flashLight);
+
+        setTimeout(() => {
+            sceneManager.removeFromScene(flashLight);
+        }, 200);
+    }
 }
 
 export let particleSystem = new ParticleSystem();

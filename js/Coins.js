@@ -62,6 +62,17 @@ export class CoinManager {
                 // Move coin towards player
                 coin.mesh.position.z += game.speed;
 
+                // Magnet effect - pull coins towards player
+                if (game.hasMagnet && window.player) {
+                    const playerPos = window.player.getPosition();
+                    const direction = new THREE.Vector3();
+                    direction.subVectors(playerPos, coin.mesh.position);
+                    direction.normalize();
+                    direction.multiplyScalar(0.1); // Magnet strength
+
+                    coin.mesh.position.add(direction);
+                }
+
                 // Rotate coin
                 coin.mesh.rotation.z += coin.rotationSpeed;
 
