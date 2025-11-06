@@ -17,6 +17,9 @@ function init() {
     // All initialization is done in the constructors of the imported modules
     console.log('Game initialized');
 
+    // Make particleSystem globally accessible for Player.js
+    window.particleSystem = particleSystem;
+
     // Start the game loop
     animate(0);
 }
@@ -52,6 +55,7 @@ function update(deltaTime) {
 
     // Update particles
     particleSystem.updateParticles(deltaTime);
+    particleSystem.updateTrailParticles(deltaTime);
 
     // Update environment (clouds)
     environment.updateClouds();
