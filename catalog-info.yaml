@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: runninggame
+  description: |
+    Ein interaktives Laufspiel, entwickelt mit Node.js und JavaScript, das HTML-basierte Spielmechaniken in einer Webanwendung umsetzt.
+  annotations:
+    github.com/project-slug: skquievreux/runninggame
+spec:
+  type: service
+  lifecycle: experimental
+  owner: guests
