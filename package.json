@@ -25,9 +25,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@types/node": "^24.8.1",
+    "@types/node": "^25.0.10",
     "gh-pages": "^6.3.0",
-    "vercel": "^48.4.0"
+    "vercel": "^50.5.0"
   },
   "engines": {
     "node": ">=20.9.0"
